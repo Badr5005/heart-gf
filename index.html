@@ -74,7 +74,7 @@ const LI={shade:0,mid:1,crisp:2};
 const T_OUT=5,T_FILL0=5.4,T_FILL=3.6,T_HERO=9.6,T_END=15;
 const st={theme:'bpurple',speed:1,hero:'Love You'};
 let W,H,D,S,CX,CY,HY,G=[],T=0,clock=0,sparks=[],waves=[],burst=false,NO=88;
-let dirty=true,gen=0,spc=new Map(),HC={},work=0,wn=0,hfs=1,hw=1;
+let slowN=0,dirty=true,gen=0,spc=new Map(),HC={},work=0,wn=0,hfs=1,hw=1;
 const P={x:0,y:0,vx:0,vy:0,a:false,t:0},par={x:0,y:0};
 const clamp=(v,a=0,b=1)=>Math.min(b,Math.max(a,v));
 const ease=x=>1-Math.pow(1-x,3);
@@ -173,6 +173,7 @@ function resize(){
   setRes();
   S=Math.min(W/28,H/32);CX=W/2;CY=H/2-2.5*S;HY=CY+1.2*S;
   build();
+  draw();dirty=false;
 }
 function replay(){
   T=0;burst=false;sparks=[];waves=[];dirty=true;
@@ -332,9 +333,10 @@ function loop(now){
     draw();dirty=false;
     work+=performance.now()-t0;
     if(++wn>=40){ /* still CPU-bound on a weak device: drop render resolution a notch */
-      if(work/wn>14&&D>1){D=Math.max(1,D-.25)}
+      const slow=work/wn>14&&D>1;
       work=0;wn=0;
-      if(cv.width!==Math.round(W*D))setRes();
+      if(slow&&++slowN>=2){slowN=0;D=Math.max(1,D*.75);setRes();draw();dirty=false}
+      else if(!slow)slowN=0;
     }
   }
 }
